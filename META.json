@@ -4,10 +4,10 @@
       "Toby Inkster (TOBYINK) <tobyink@cpan.org>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "Dist::Inkt::Profile::TOBYINK version 0.010, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "Dist::Inkt::Profile::TOBYINK version 0.015, CPAN::Meta::Converter version 2.120921",
    "keywords" : [],
    "license" : [
-      "perl"
+      "perl_5"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -53,7 +53,7 @@
    "provides" : {
       "RDF::DOAP::Lite" : {
          "file" : "lib/RDF/DOAP/Lite.pm",
-         "version" : "0.001"
+         "version" : "0.002"
       }
    },
    "release_status" : "stable",
@@ -68,10 +68,11 @@
       ],
       "repository" : {
          "type" : "git",
+         "url" : "git://github.com/tobyink/p5-rdf-doap-lite.git",
          "web" : "https://github.com/tobyink/p5-rdf-doap-lite"
       }
    },
-   "version" : "0.001",
+   "version" : "0.002",
    "x_provides_scripts" : {
       "cpan2doap" : {
          "file" : "bin/cpan2doap"

@@ -6,7 +6,7 @@ use utf8;
 package RDF::DOAP::Lite;
 
 our $AUTHORITY = 'cpan:TOBYINK';
-our $VERSION   = '0.001';
+our $VERSION   = '0.002';
 
 use CPAN::Meta    2.110320  qw();
 use Scalar::Util  1.24      qw( openhandle );
@@ -23,7 +23,16 @@ sub parse_person
 		(?:
 			\s+ <(?:mailto\:)?(.+)>
 		)
-	\s* \z }x
+	\s* \z }ix and return ($1, $2, $3);
+	
+	$_[0] =~ m{ \A \s*
+		(\S.+)
+		(?:
+			\s+ <(?:mailto\:)?(.+)>
+		)
+	\s* \z }ix and return ($1, undef, $2);
+	
+	return $_[0];
 }
 
 {
@@ -41,7 +50,13 @@ sub parse_person
 sub turtle_person
 {
 	my ($name, $nick, $mbox) = parse_person @_;
-	
+
+	unless (defined $nick or defined $mbox)
+	{
+		return '[ a foaf:Person ]' unless defined $name;
+		return sprintf('[ a foaf:Person; rdfs:label %s ]', turtle_literal $name);
+	}
+
 	my $person = '[ a foaf:Person';
 	$person .= sprintf('; foaf:name %s', turtle_literal $name) if defined $name;
 	$person .= sprintf('; foaf:nick %s', turtle_literal $nick) if defined $nick;
@@ -63,16 +78,16 @@ sub xml_person
 {
 	my ($name, $nick, $mbox) = parse_person @_;
 	
-	if (!defined $nick and !defined $mbox)
+	unless (defined $nick or defined $mbox)
 	{
 		return '<foaf:Person />' unless defined $name;
-		return sprintf('<foaf:Person foaf:name="%s" />', xml_literal $name);
+		return sprintf('<foaf:Person rdfs:label="%s" />', xml_literal $name);
 	}
 	
 	my $person = "<foaf:Person>\n";
 	$person .= sprintf("      <foaf:name>%s</foaf:name>\n", xml_literal $name) if defined $name;
 	$person .= sprintf("      <foaf:nick>%s</foaf:nick>\n", xml_literal $nick) if defined $nick;
-	$person .= sprintf("      <foaf:mbox rdf:resource=\"%s\" />\n", xml_literal $mbox) if defined $mbox;
+	$person .= sprintf("      <foaf:mbox rdf:resource=\"mailto:%s\" />\n", xml_literal $mbox) if defined $mbox;
 	$person .= "    </foaf:Person>";
 	
 	return $person;
@@ -332,7 +347,7 @@ Toby Inkster E<lt>tobyink@cpan.orgE<gt>.
 
 =head1 COPYRIGHT AND LICENCE
 
-This software is copyright (c) 2013 by Toby Inkster.
+This software is copyright (c) 2013-2014 by Toby Inkster.
 
 This is free software; you can redistribute it and/or modify it under
 the same terms as the Perl 5 programming language system itself.

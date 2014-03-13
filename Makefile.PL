@@ -7,7 +7,7 @@ my $meta = {
   "abstract"           => "write DOAP data quickly and easily",
   "author"             => ["Toby Inkster (TOBYINK) <tobyink\@cpan.org>"],
   "dynamic_config"     => 0,
-  "generated_by"       => "Dist::Inkt::Profile::TOBYINK version 0.010, CPAN::Meta::Converter version 2.120921",
+  "generated_by"       => "Dist::Inkt::Profile::TOBYINK version 0.015, CPAN::Meta::Converter version 2.120921",
   "keywords"           => [],
   "license"            => ["perl_5"],
   "meta-spec"          => {
@@ -26,7 +26,7 @@ my $meta = {
                             test      => { requires => { "Test::More" => 0.96 } },
                           },
   "provides"           => {
-                            "RDF::DOAP::Lite" => { file => "lib/RDF/DOAP/Lite.pm", version => 0.001 },
+                            "RDF::DOAP::Lite" => { file => "lib/RDF/DOAP/Lite.pm", version => 0.002 },
                           },
   "release_status"     => "stable",
   "resources"          => {
@@ -35,10 +35,14 @@ my $meta = {
                                             },
                             homepage     => "https://metacpan.org/release/RDF-DOAP-Lite",
                             license      => ["http://dev.perl.org/licenses/"],
-                            repository   => { type => "git", web => "https://github.com/tobyink/p5-rdf-doap-lite" },
+                            repository   => {
+                                              type => "git",
+                                              url  => "git://github.com/tobyink/p5-rdf-doap-lite.git",
+                                              web  => "https://github.com/tobyink/p5-rdf-doap-lite",
+                                            },
                             X_identifier => "http://purl.org/NET/cpan-uri/dist/RDF-DOAP-Lite/project",
                           },
-  "version"            => 0.001,
+  "version"            => 0.002,
   "x_provides_scripts" => { cpan2doap => { file => "bin/cpan2doap" } },
 };
 
@@ -51,6 +55,7 @@ my %WriteMakefileArgs = (
 	VERSION    => $meta->{version},
 	EXE_FILES  => [ map $_->{file}, values %{ $meta->{x_provides_scripts} || {} } ],
 	NAME       => do { my $n = $meta->{name}; $n =~ s/-/::/g; $n },
+	test       => { TESTS => "t/*.t" },
 	%dynamic_config,
 );
 
@@ -63,6 +68,7 @@ sub deps
 	{
 		for my $dep (keys %{$meta->{prereqs}{$stage}{requires}})
 		{
+			next if $dep eq 'perl';
 			my $ver = $meta->{prereqs}{$stage}{requires}{$dep};
 			$r{$dep} = $ver if !exists($r{$dep}) || $ver >= $r{$dep};
 		}
@@ -95,16 +101,19 @@ else
 }
 
 {
-	my $minperl = delete $WriteMakefileArgs{PREREQ_PM}{perl};
-	exists($WriteMakefileArgs{$_}) && delete($WriteMakefileArgs{$_}{perl})
-		for qw(BUILD_REQUIRES TEST_REQUIRES CONFIGURE_REQUIRES);
-	if ($minperl and $EUMM >= 6.48)
+	my ($minperl) = reverse sort(
+		grep defined && /^[0-9]+(\.[0-9]+)?$/,
+		map $meta->{prereqs}{$_}{requires}{perl},
+		qw( configure build runtime )
+	);
+	
+	if (defined($minperl))
 	{
-		$WriteMakefileArgs{MIN_PERL_VERSION} ||= $minperl;
-	}
-	elsif ($minperl)
-	{
-		die "Need Perl >= $minperl" unless $] >= $minperl;
+		die "Installing $meta->{name} requires Perl >= $minperl"
+			unless $] >= $minperl;
+		
+		$WriteMakefileArgs{MIN_PERL_VERSION} ||= $minperl
+			if $EUMM >= 6.48;
 	}
 }
 
